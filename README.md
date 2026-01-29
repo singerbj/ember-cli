@@ -1,6 +1,38 @@
 # Ember Mug CLI
 
+[![npm version](https://badge.fury.io/js/ember-mug.svg)](https://www.npmjs.com/package/ember-mug)
+[![CI](https://github.com/singerbj/ember-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/singerbj/ember-cli/actions/workflows/ci.yml)
+
 A TypeScript CLI application for controlling Ember mugs, built with [Ink](https://github.com/vadimdemedes/ink) (React for CLIs).
+
+## Installation
+
+### Global Installation (Recommended)
+
+```bash
+npm install -g ember-mug
+```
+
+Then run:
+
+```bash
+ember-mug
+```
+
+### Run with npx (No Installation)
+
+```bash
+npx ember-mug
+```
+
+### Local Development
+
+```bash
+git clone https://github.com/singerbj/ember-cli.git
+cd ember-cli
+npm install
+npm run dev
+```
 
 ## Features
 
@@ -13,23 +45,6 @@ A TypeScript CLI application for controlling Ember mugs, built with [Ink](https:
 - **LED Color Control**: Customize your mug's LED color with presets or custom RGB values
 - **Temperature Unit Toggle**: Switch between Celsius and Fahrenheit
 - **Persistent Settings**: Your preferences are saved between sessions
-
-## Installation
-
-```bash
-npm install
-npm run build
-```
-
-## Usage
-
-```bash
-npm start
-# or after build:
-node dist/cli.js
-# or for development:
-npm run dev
-```
 
 ## Controls
 
@@ -59,6 +74,20 @@ npm run dev
 - Bluetooth adapter with BLE support
 - Ember Mug 2 (other models may work but are untested)
 
+### Platform-Specific Notes
+
+#### Linux
+You may need to grant Bluetooth permissions:
+```bash
+sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+```
+
+#### macOS
+Grant Bluetooth permissions to your terminal application in System Preferences > Security & Privacy > Privacy > Bluetooth.
+
+#### Windows
+Requires Windows 10 build 15063 or later with Bluetooth 4.0+ adapter.
+
 ## Technical Details
 
 This application uses:
@@ -67,6 +96,10 @@ This application uses:
 - [Conf](https://github.com/sindresorhus/conf) for persistent settings storage
 
 The Ember mug Bluetooth protocol was reverse-engineered by [orlopau/ember-mug](https://github.com/orlopau/ember-mug).
+
+## Versioning
+
+This project uses [Semantic Versioning](https://semver.org/). Releases are published to npm automatically when a new version tag is pushed to the main branch.
 
 ## License
 
