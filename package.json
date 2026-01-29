@@ -1,25 +1,50 @@
 {
-  "name": "ember-mug-cli",
+  "name": "ember-mug",
   "version": "1.0.0",
-  "description": "A CLI app for controlling Ember mugs",
+  "description": "A CLI app for controlling Ember mugs via Bluetooth",
   "type": "module",
-  "main": "dist/cli.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "ember-mug": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
     "start": "node dist/cli.js",
-    "dev": "tsx src/cli.tsx"
+    "dev": "tsx src/cli.tsx",
+    "prepublishOnly": "npm run build",
+    "version": "npm run build"
   },
   "keywords": [
     "ember",
+    "ember-mug",
     "mug",
     "cli",
-    "bluetooth"
+    "bluetooth",
+    "ble",
+    "temperature",
+    "smart-mug"
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/singerbj/ember-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/singerbj/ember-cli/issues"
+  },
+  "homepage": "https://github.com/singerbj/ember-cli#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@abandonware/noble": "^1.9.2-25",
     "chalk": "^5.3.0",
