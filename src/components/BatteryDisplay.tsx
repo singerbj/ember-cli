@@ -18,6 +18,7 @@ interface BatteryDisplayProps {
   width?: number;
   height?: number;
   theme: TerminalTheme;
+  batteryRate?: number;
 }
 
 export function BatteryDisplay({
@@ -27,11 +28,13 @@ export function BatteryDisplay({
   width,
   height,
   theme,
+  batteryRate,
 }: BatteryDisplayProps): React.ReactElement {
   const batteryTimeEstimate = estimateBatteryLife(
     batteryLevel,
     isCharging,
     liquidState,
+    batteryRate,
   );
 
   return (

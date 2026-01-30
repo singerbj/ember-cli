@@ -45,6 +45,8 @@ export function App(): React.ReactElement {
     setTargetTemp,
     setTemperatureUnit: setMugTempUnit,
     setLedColor,
+    tempRate,
+    batteryRate,
   } = useMug();
 
   // Get theme based on mug state
@@ -228,6 +230,7 @@ export function App(): React.ReactElement {
                 temperatureUnit={localTempUnit}
                 width={panelWidth}
                 theme={theme}
+                tempRate={tempRate}
               />
               <Box marginTop={1}>
                 <BatteryDisplay
@@ -236,6 +239,7 @@ export function App(): React.ReactElement {
                   liquidState={mugState.liquidState}
                   width={panelWidth}
                   theme={theme}
+                  batteryRate={batteryRate}
                 />
               </Box>
               <Box marginTop={1}>
@@ -273,6 +277,7 @@ export function App(): React.ReactElement {
                   width={panelWidth}
                   height={8}
                   theme={theme}
+                  tempRate={tempRate}
                 />
                 <BatteryDisplay
                   batteryLevel={mugState.batteryLevel}
@@ -281,6 +286,7 @@ export function App(): React.ReactElement {
                   width={panelWidth}
                   height={8}
                   theme={theme}
+                  batteryRate={batteryRate}
                 />
               </Box>
 

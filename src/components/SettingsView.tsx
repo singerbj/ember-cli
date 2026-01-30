@@ -80,12 +80,14 @@ export function SettingsView({
       } else if (selectedIndex === 1) {
         // LED Color
         if (key.leftArrow || input === "h" || key.rightArrow || input === "l") {
-          const currentColorIndex = PRESET_COLORS.findIndex(
-            (p) =>
-              p.color.r === ledColor.r &&
-              p.color.g === ledColor.g &&
-              p.color.b === ledColor.b,
-          );
+          const currentColorIndex = ledColor
+            ? PRESET_COLORS.findIndex(
+                (p) =>
+                  p.color.r === ledColor.r &&
+                  p.color.g === ledColor.g &&
+                  p.color.b === ledColor.b,
+              )
+            : -1;
 
           let nextIndex = currentColorIndex;
           if (key.leftArrow || input === "h") {
@@ -121,15 +123,19 @@ export function SettingsView({
     { isActive },
   );
 
-  const currentColorPreset = PRESET_COLORS.find(
-    (p) =>
-      p.color.r === ledColor.r &&
-      p.color.g === ledColor.g &&
-      p.color.b === ledColor.b,
-  );
+  const currentColorPreset = ledColor
+    ? PRESET_COLORS.find(
+        (p) =>
+          p.color.r === ledColor.r &&
+          p.color.g === ledColor.g &&
+          p.color.b === ledColor.b,
+      )
+    : undefined;
   const colorDisplayValue = currentColorPreset
     ? currentColorPreset.name
-    : rgbToHex(ledColor.r, ledColor.g, ledColor.b);
+    : ledColor
+      ? rgbToHex(ledColor.r, ledColor.g, ledColor.b)
+      : "Unknown";
 
   return (
     <Box justifyContent="center" marginY={1}>
@@ -156,7 +162,11 @@ export function SettingsView({
           <SettingRow
             label="LED Color"
             value={colorDisplayValue}
-            valueColor={rgbToHex(ledColor.r, ledColor.g, ledColor.b)}
+            valueColor={
+              ledColor
+                ? rgbToHex(ledColor.r, ledColor.g, ledColor.b)
+                : undefined
+            }
             isSelected={selectedIndex === 1}
             hint="Left/Right to change"
             theme={theme}

@@ -79,6 +79,7 @@ export function estimateTimeToTargetTemp(
   currentTemp: number,
   targetTemp: number,
   liquidState: LiquidState,
+  dynamicRate?: number, // Degrees per minute
 ): number | null {
   if (liquidState === LiquidState.Empty) {
     return null;
@@ -90,9 +91,18 @@ export function estimateTimeToTargetTemp(
     return 0; // Already at target
   }
 
-  // Estimate based on typical Ember mug heating/cooling rates
-  // Heating: approximately 1°C per minute
-  // Cooling: approximately 0.5°C per minute (slower due to insulation)
+  // Use dynamic rate if provided and valid (greater than a small threshold)
+  if (dynamicRate && Math.abs(dynamicRate) > 0.05) {
+    // Ensure the rate is in the right direction
+    const isHeating = currentTemp < targetTemp;
+    const isRateHeating = dynamicRate > 0;
+
+    if (isHeating === isRateHeating) {
+      return tempDiff / Math.abs(dynamicRate);
+    }
+  }
+
+  // Fallback to typical Ember mug heating/cooling rates
   const isHeating = currentTemp < targetTemp;
   const ratePerMinute = isHeating ? 1.0 : 0.5;
 
@@ -103,8 +113,14 @@ export function estimateBatteryLife(
   batteryLevel: number,
   isCharging: boolean,
   liquidState: LiquidState,
+  dynamicRate?: number, // Percent per minute
 ): number | null {
   if (isCharging) {
+    if (dynamicRate && dynamicRate > 0.1) {
+      const remaining = 100 - batteryLevel;
+      if (remaining <= 0) return 0;
+      return remaining / dynamicRate;
+    }
     // Estimate time to full charge
     const remaining = 100 - batteryLevel;
     if (remaining <= 0) return 0;
@@ -113,6 +129,11 @@ export function estimateBatteryLife(
 
   if (batteryLevel <= 0) {
     return 0;
+  }
+
+  // Use dynamic rate if provided and discharging
+  if (dynamicRate && dynamicRate < -0.01) {
+    return batteryLevel / Math.abs(dynamicRate);
   }
 
   // Determine drain rate based on mug state
@@ -130,6 +151,36 @@ export function estimateBatteryLife(
   }
 
   return batteryLevel / drainRate;
+}
+
+export function calculateRate(
+  history: { value: number; time: number }[],
+  windowMs: number = 2 * 60 * 1000,
+): number {
+  if (history.length < 2) return 0;
+
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  const windowHistory = history.filter((item) => item.time >= windowStart);
+
+  if (windowHistory.length < 2) {
+    // If not enough data in the current window, use the last two points overall if they are recent enough
+    const last = history[history.length - 1];
+    const secondLast = history[history.length - 2];
+    if (now - last.time > windowMs) return 0;
+
+    const valDiff = last.value - secondLast.value;
+    const timeDiffMin = (last.time - secondLast.time) / (1000 * 60);
+    return timeDiffMin > 0 ? valDiff / timeDiffMin : 0;
+  }
+
+  const first = windowHistory[0];
+  const last = windowHistory[windowHistory.length - 1];
+
+  const valDiff = last.value - first.value;
+  const timeDiffMin = (last.time - first.time) / (1000 * 60);
+
+  return timeDiffMin > 0 ? valDiff / timeDiffMin : 0;
 }
 
 export function getTemperatureColor(
