@@ -20,6 +20,7 @@ interface TemperatureDisplayProps {
   width?: number;
   height?: number;
   theme: TerminalTheme;
+  tempRate?: number;
 }
 
 export function TemperatureDisplay({
@@ -30,6 +31,7 @@ export function TemperatureDisplay({
   width,
   height,
   theme,
+  tempRate,
 }: TemperatureDisplayProps): React.ReactElement {
   const isEmpty = liquidState === LiquidState.Empty;
   const isAtTarget = Math.abs(currentTemp - targetTemp) < 0.5 && !isEmpty;
@@ -38,6 +40,7 @@ export function TemperatureDisplay({
     currentTemp,
     targetTemp,
     liquidState,
+    tempRate,
   );
 
   return (

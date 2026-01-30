@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "postbuild": "chmod +x dist/cli.js",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "start": "node dist/cli.js",

@@ -6,7 +6,7 @@ import {
   TemperatureUnit,
   RGBColor,
 } from "../lib/types.js";
-
+import { calculateRate } from "../lib/utils.js";
 interface UseMugReturn {
   state: MugState;
   isScanning: boolean;
@@ -17,6 +17,8 @@ interface UseMugReturn {
   setTemperatureUnit: (unit: TemperatureUnit) => Promise<void>;
   setLedColor: (color: RGBColor) => Promise<void>;
   disconnect: () => Promise<void>;
+  tempRate: number;
+  batteryRate: number;
 }
 
 const initialState: MugState = {
@@ -36,6 +38,54 @@ export function useMug(): UseMugReturn {
   const [isScanning, setIsScanning] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [foundMugName, setFoundMugName] = useState<string | null>(null);
+  const [tempHistory, setTempHistory] = useState<
+    { value: number; time: number }[]
+  >([]);
+  const [batteryHistory, setBatteryHistory] = useState<
+    { value: number; time: number }[]
+  >([]);
+
+  // Update temp history
+  useEffect(() => {
+    if (state.connected && state.liquidState !== LiquidState.Empty) {
+      const now = Date.now();
+      setTempHistory((prev) => {
+        const last = prev[prev.length - 1];
+        if (
+          last &&
+          last.value === state.currentTemp &&
+          now - last.time < 10000
+        ) {
+          return prev;
+        }
+        const next = [...prev, { value: state.currentTemp, time: now }];
+        return next.filter((item) => now - item.time < 5 * 60 * 1000);
+      });
+    } else if (!state.connected || state.liquidState === LiquidState.Empty) {
+      if (tempHistory.length > 0) setTempHistory([]);
+    }
+  }, [state.currentTemp, state.connected, state.liquidState]);
+
+  // Update battery history
+  useEffect(() => {
+    if (state.connected) {
+      const now = Date.now();
+      setBatteryHistory((prev) => {
+        const last = prev[prev.length - 1];
+        if (
+          last &&
+          last.value === state.batteryLevel &&
+          now - last.time < 30000
+        ) {
+          return prev;
+        }
+        const next = [...prev, { value: state.batteryLevel, time: now }];
+        return next.filter((item) => now - item.time < 10 * 60 * 1000);
+      });
+    } else if (!state.connected) {
+      if (batteryHistory.length > 0) setBatteryHistory([]);
+    }
+  }, [state.batteryLevel, state.connected]);
 
   useEffect(() => {
     const manager = getBluetoothManager();
@@ -131,6 +181,9 @@ export function useMug(): UseMugReturn {
     }
   }, []);
 
+  const tempRate = calculateRate(tempHistory);
+  const batteryRate = calculateRate(batteryHistory, 5 * 60 * 1000);
+
   return {
     state,
     isScanning,
@@ -141,5 +194,7 @@ export function useMug(): UseMugReturn {
     setTemperatureUnit,
     setLedColor,
     disconnect,
+    tempRate,
+    batteryRate,
   };
 }

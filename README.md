@@ -39,34 +39,36 @@ npm run dev
 - **Temperature Control**: View current temperature and adjust target temperature
 - **Temperature Presets**: Quick-select from predefined temperature presets (Latte, Coffee, Tea)
 - **Battery Monitoring**: Real-time battery level with estimated battery life
-- **Time Estimates**:
-  - Estimated time to reach target temperature
-  - Estimated battery life based on current mug state
-- **LED Color Control**: Customize your mug's LED color with presets or custom RGB values
+- **Dynamic Time Estimates**:
+  - Estimated time to reach target temperature based on real-time heating/cooling rates
+  - Estimated battery life based on actual discharge/charge rates
+- **LED Color Control**: Customize your mug's LED color via the settings panel
 - **Temperature Unit Toggle**: Switch between Celsius and Fahrenheit
-- **Persistent Settings**: Your preferences are saved between sessions
+- **Persistent Settings**: Your preferences and custom presets are saved between sessions
+- **Responsive Layout**: Adapts to narrow or wide terminals automatically
 
 ## Controls
 
 ### When Disconnected
+
 - `s` - Start scanning for Ember mug
 - `r` - Retry scanning (after error)
 - `q` - Quit
 
 ### When Connected
-- `t` - Enter temperature adjustment mode
-  - `←/→` or `h/l` - Adjust by ±0.5°
-  - `↑/↓` or `j/k` - Adjust by ±1°
-  - `t` or `Enter` - Exit temperature mode
+
+- `←/→` or `h/l` - Adjust temperature by ±0.5°
 - `1-3` - Select temperature preset
-- `c` - Toggle LED color control
-  - `1-8` - Select preset color
-  - `c` - Toggle custom color mode
-  - `r/g/b` - Select color channel (in custom mode)
-  - `←/→` - Adjust selected channel
 - `u` - Toggle temperature unit (°C/°F)
-- `o` - Open settings
+- `o` - Open settings (LED color, unit, preset editing)
 - `q` - Quit
+
+### In Settings
+
+- `↑/↓` or `j/k` - Navigate settings
+- `Enter/Space` - Toggle unit
+- `←/→` or `h/l` - Change LED color or edit preset temperature
+- `Esc` or `q` - Close settings
 
 ## Requirements
 
@@ -77,20 +79,25 @@ npm run dev
 ### Platform-Specific Notes
 
 #### Linux
+
 You may need to grant Bluetooth permissions:
+
 ```bash
 sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 ```
 
 #### macOS
+
 Grant Bluetooth permissions to your terminal application in System Preferences > Security & Privacy > Privacy > Bluetooth.
 
 #### Windows
+
 Requires Windows 10 build 15063 or later with Bluetooth 4.0+ adapter.
 
 ## Technical Details
 
 This application uses:
+
 - [@abandonware/noble](https://github.com/abandonware/noble) for Bluetooth LE communication
 - [Ink](https://github.com/vadimdemedes/ink) for the React-based CLI interface
 - [Conf](https://github.com/sindresorhus/conf) for persistent settings storage
