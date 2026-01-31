@@ -1,5 +1,17 @@
 #!/usr/bin/env node
 
+// Helper function for liquid state names
+function getLiquidStateName(state: number): string {
+  const states: Record<number, string> = {
+    1: 'Empty',
+    2: 'Filling',
+    4: 'Cooling',
+    5: 'Heating',
+    6: 'Stable Temperature',
+  };
+  return states[state] || 'Unknown';
+}
+
 // Parse command line arguments BEFORE importing modules that initialize Bluetooth
 const args = process.argv.slice(2);
 const showHelp = args.includes('--help') || args.includes('-h');
@@ -84,8 +96,71 @@ async function runDebugMode() {
     process.exit(1);
   }
 
-  // Keep the process running
-  await new Promise(() => {});
+  // Keep the process running and allow interactive commands
+  const readline = await import('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  console.log("\n--- Debug Commands ---");
+  console.log("  temp <value>  - Set target temperature (50-63°C)");
+  console.log("  color <r> <g> <b> [a]  - Set LED color (0-255)");
+  console.log("  status        - Show current status");
+  console.log("  readall       - Read all characteristic values");
+  console.log("  quit / Ctrl+C - Exit\n");
+
+  const handleCommand = async (line: string) => {
+    const parts = line.trim().split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+
+    try {
+      if (cmd === 'temp' && parts[1]) {
+        const temp = parseFloat(parts[1]);
+        if (isNaN(temp) || temp < 50 || temp > 63) {
+          console.log("  Error: Temperature must be between 50 and 63");
+        } else {
+          console.log(`  Setting temperature to ${temp}°C...`);
+          await manager.setTargetTemp(temp);
+          console.log(`  Done! Check mug for update.`);
+        }
+      } else if (cmd === 'readall') {
+        const state = manager.getState();
+        console.log("\n  Current Mug State:");
+        console.log("  " + JSON.stringify(state, null, 2).split('\n').join('\n  '));
+        console.log(`\n  Liquid State: ${state.liquidState} (${getLiquidStateName(state.liquidState)})`);
+      } else if (cmd === 'color' && parts.length >= 4) {
+        const r = parseInt(parts[1]);
+        const g = parseInt(parts[2]);
+        const b = parseInt(parts[3]);
+        const a = parts[4] ? parseInt(parts[4]) : 255;
+        if ([r, g, b, a].some(v => isNaN(v) || v < 0 || v > 255)) {
+          console.log("  Error: Color values must be between 0 and 255");
+        } else {
+          console.log(`  Setting color to rgb(${r}, ${g}, ${b}, ${a/255})...`);
+          await manager.setLedColor({ r, g, b, a });
+          console.log(`  Done! Check mug for update.`);
+        }
+      } else if (cmd === 'status') {
+        const state = manager.getState();
+        console.log("\n  Current Status:");
+        console.log("  " + JSON.stringify(state, null, 2).split('\n').join('\n  '));
+      } else if (cmd === 'quit' || cmd === 'exit') {
+        rl.close();
+        manager.disconnect();
+        process.exit(0);
+      } else if (cmd) {
+        console.log(`  Unknown command: ${cmd}`);
+      }
+    } catch (error: unknown) {
+      console.log(`  Error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    rl.prompt();
+  };
+
+  rl.prompt();
+  rl.on('line', handleCommand);
 }
 
 // Normal mode: run with Ink UI

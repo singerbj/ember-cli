@@ -43,6 +43,12 @@ export function Presets({
   // Fixed width for each preset button (12 chars inner content)
   const boxWidth = 12;
 
+  // Calculate minimum width needed for horizontal layout
+  // Each box: 14 chars (12 inner + 2 borders) + 1 gap between = ~15 per preset
+  // Plus panel borders (~4 chars)
+  const minHorizontalWidth = presets.length * 15 + 4;
+  const useVerticalLayout = width !== undefined && width < minHorizontalWidth;
+
   return (
     <Panel
       title="Temperature Presets"
@@ -51,20 +57,85 @@ export function Presets({
       width={width}
       height={height}
     >
-      <Box justifyContent="center" gap={1}>
-        {presets.map((preset, index) => (
-          <PresetButton
-            key={preset.id}
-            preset={preset}
-            index={index}
-            isSelected={selectedIndex === index}
-            temperatureUnit={temperatureUnit}
-            theme={theme}
-            boxWidth={boxWidth}
-          />
-        ))}
-      </Box>
+      {useVerticalLayout ? (
+        <VerticalPresetTable
+          presets={presets}
+          selectedIndex={selectedIndex}
+          temperatureUnit={temperatureUnit}
+          theme={theme}
+        />
+      ) : (
+        <Box justifyContent="center" gap={1}>
+          {presets.map((preset, index) => (
+            <PresetButton
+              key={preset.id}
+              preset={preset}
+              index={index}
+              isSelected={selectedIndex === index}
+              temperatureUnit={temperatureUnit}
+              theme={theme}
+              boxWidth={boxWidth}
+            />
+          ))}
+        </Box>
+      )}
     </Panel>
+  );
+}
+
+interface VerticalPresetTableProps {
+  presets: Preset[];
+  selectedIndex: number;
+  temperatureUnit: TemperatureUnit;
+  theme: TerminalTheme;
+}
+
+function VerticalPresetTable({
+  presets,
+  selectedIndex,
+  temperatureUnit,
+  theme,
+}: VerticalPresetTableProps): React.ReactElement {
+  const nameWidth = 8;
+  const tempWidth = 7;
+  const contentWidth = nameWidth + tempWidth + 1; // +1 for space between
+
+  const topBorder = `+${"-".repeat(contentWidth)}+---+`;
+  const midBorder = `+${"-".repeat(contentWidth)}+---+`;
+
+  return (
+    <Box flexDirection="column" alignItems="center">
+      <Text color={theme.dimText}>{topBorder}</Text>
+      {presets.map((preset, index) => {
+        const isSelected = selectedIndex === index;
+        const textColor = isSelected ? theme.text : theme.dimText;
+        const tempColor = isSelected ? theme.primary : theme.text;
+        const nameDisplay = preset.name.padEnd(nameWidth);
+        const tempDisplay = formatTemperature(
+          preset.temperature,
+          temperatureUnit,
+        ).padStart(tempWidth);
+
+        return (
+          <React.Fragment key={preset.id}>
+            <Text>
+              <Text color={theme.dimText}>|</Text>
+              <Text color={textColor} bold={isSelected}>
+                {nameDisplay}
+              </Text>
+              <Text> </Text>
+              <Text color={tempColor}>{tempDisplay}</Text>
+              <Text color={theme.dimText}>|</Text>
+              <Text color={theme.primary} bold>
+                {" "}{index + 1}{" "}
+              </Text>
+              <Text color={theme.dimText}>|</Text>
+            </Text>
+            <Text color={theme.dimText}>{midBorder}</Text>
+          </React.Fragment>
+        );
+      })}
+    </Box>
   );
 }
 
