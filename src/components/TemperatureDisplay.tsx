@@ -72,7 +72,7 @@ export function TemperatureDisplay({
 
         <Box marginX={2} justifyContent="center" alignItems="center">
           <Text color={theme.primary} bold>
-            {"-->"}
+            →
           </Text>
         </Box>
 

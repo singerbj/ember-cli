@@ -229,6 +229,12 @@ export class BluetoothManager extends EventEmitter {
         try {
           debug('Starting service/characteristic discovery...');
           await this.discoverCharacteristics();
+
+          // Attempt to authenticate/pair with the mug by reading protected characteristics
+          // This may trigger the OS pairing dialog on macOS
+          debug('Attempting to authenticate with mug (may trigger pairing)...');
+          await this.attemptPairing();
+
           debug('Setting up push notifications...');
           await this.setupNotifications();
           debug('Reading initial values from mug...');
@@ -282,11 +288,14 @@ export class BluetoothManager extends EventEmitter {
 
         debug(`Found ${characteristics?.length || 0} characteristics`);
         for (const char of characteristics || []) {
-          const uuid = char.uuid.toLowerCase().replace(/-/g, '');
-          debug(`  - Characteristic: ${uuid}`);
-          this.characteristics.set(uuid, char);
+          const originalUuid = char.uuid;
+          const normalizedUuid = char.uuid.toLowerCase().replace(/-/g, '');
+          debug(`  - Characteristic: original="${originalUuid}" normalized="${normalizedUuid}"`);
+          this.characteristics.set(normalizedUuid, char);
         }
         debug('Characteristic discovery complete');
+        debug(`Stored ${this.characteristics.size} characteristics in map`);
+        debug(`Available UUIDs: ${Array.from(this.characteristics.keys()).join(', ')}`);
         resolve();
       });
     });
@@ -363,6 +372,50 @@ export class BluetoothManager extends EventEmitter {
     ]);
   }
 
+  private async attemptPairing(): Promise<void> {
+    // Try reading protected characteristics to trigger OS-level pairing
+    // The UDSK and DSK characteristics require authentication on Ember mugs
+
+    // First try reading the mug name
+    try {
+      const nameData = await this.readCharacteristic(EMBER_CHARACTERISTICS.MUG_NAME);
+      if (nameData) {
+        const name = nameData.toString('utf8').replace(/\0/g, '').trim();
+        if (name) {
+          debug(`Read mug name: "${name}"`);
+          this.state.mugName = name;
+        }
+      }
+    } catch (err) {
+      debug('Failed to read mug name:', err);
+    }
+
+    // Try reading DSK (Device Secret Key) - this often requires pairing
+    try {
+      debug('Reading DSK characteristic (may trigger pairing)...');
+      const dskData = await this.readCharacteristic(EMBER_CHARACTERISTICS.DSK);
+      if (dskData) {
+        debug('DSK read successful, length:', dskData.length);
+      }
+    } catch (err) {
+      debug('Failed to read DSK (this is normal if not paired):', err);
+    }
+
+    // Try reading UDSK (User Device Secret Key) - this requires authentication
+    try {
+      debug('Reading UDSK characteristic (may trigger pairing)...');
+      const udskData = await this.readCharacteristic(EMBER_CHARACTERISTICS.UDSK);
+      if (udskData) {
+        debug('UDSK read successful, length:', udskData.length);
+      }
+    } catch (err) {
+      debug('Failed to read UDSK (this is normal if not paired):', err);
+    }
+
+    // Small delay to allow any pairing dialogs to be processed
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
   private startPolling(): void {
     // Poll temperature every 2 seconds
     this.pollInterval = setInterval(async () => {
@@ -404,14 +457,25 @@ export class BluetoothManager extends EventEmitter {
   }
 
   private async writeCharacteristic(uuid: string, data: Buffer): Promise<void> {
-    const char = this.characteristics.get(uuid);
-    if (!char) return;
+    debug(`writeCharacteristic: attempting to write to UUID: ${uuid}`);
+    debug(`  Characteristics map keys: [${Array.from(this.characteristics.keys()).join(', ')}]`);
+    debug(`  Data to write: [${data.toString('hex')}] (${data.length} bytes)`);
 
+    const char = this.characteristics.get(uuid);
+    if (!char) {
+      const error = `Characteristic not found for UUID: ${uuid}. Available characteristics: ${Array.from(this.characteristics.keys()).join(', ')}`;
+      debug(`  ERROR: ${error}`);
+      throw new Error(error);
+    }
+
+    debug(`  Characteristic found, proceeding with write...`);
     return new Promise((resolve, reject) => {
       char.write(data, false, (error) => {
         if (error) {
+          debug(`  Write failed: ${error}`);
           reject(error);
         } else {
+          debug(`  Write successful`);
           resolve();
         }
       });
@@ -478,10 +542,13 @@ export class BluetoothManager extends EventEmitter {
   }
 
   async setTargetTemp(temp: number): Promise<void> {
+    debug(`setTargetTemp called with: ${temp}°C`);
     const clampedTemp = Math.max(MIN_TEMP_CELSIUS, Math.min(MAX_TEMP_CELSIUS, temp));
     const value = Math.round(clampedTemp * 100);
     const buffer = Buffer.alloc(2);
     buffer.writeUInt16LE(value, 0);
+    debug(`  Clamped temp: ${clampedTemp}°C, Value: ${value}, Buffer hex: ${buffer.toString('hex')}`);
+    debug(`  Target UUID: ${EMBER_CHARACTERISTICS.TARGET_TEMP}`);
     await this.writeCharacteristic(EMBER_CHARACTERISTICS.TARGET_TEMP, buffer);
     this.state.targetTemp = clampedTemp;
     this.emitState();
@@ -495,7 +562,10 @@ export class BluetoothManager extends EventEmitter {
   }
 
   async setLedColor(color: RGBColor): Promise<void> {
+    debug(`setLedColor called with: r=${color.r}, g=${color.g}, b=${color.b}, a=${color.a}`);
     const buffer = Buffer.from([color.r, color.g, color.b, color.a]);
+    debug(`  Buffer hex: ${buffer.toString('hex')}`);
+    debug(`  LED Color UUID: ${EMBER_CHARACTERISTICS.LED_COLOR}`);
     await this.writeCharacteristic(EMBER_CHARACTERISTICS.LED_COLOR, buffer);
     this.state.color = color;
     this.emitState();

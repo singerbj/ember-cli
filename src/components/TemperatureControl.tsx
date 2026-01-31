@@ -100,11 +100,13 @@ function TemperatureSlider({
   theme,
 }: TemperatureSliderProps): React.ReactElement {
   const totalWidth = 16;
-  const normalizedValue = (value - min) / (max - min);
+  // Clamp value to prevent negative repeat counts
+  const clampedValue = Math.max(min, Math.min(max, value));
+  const normalizedValue = (clampedValue - min) / (max - min);
   const position = Math.round(normalizedValue * (totalWidth - 1));
 
-  const leftPart = "━".repeat(position);
-  const rightPart = "━".repeat(totalWidth - position - 1);
+  const leftPart = "━".repeat(Math.max(0, position));
+  const rightPart = "━".repeat(Math.max(0, totalWidth - position - 1));
 
   return (
     <Text>

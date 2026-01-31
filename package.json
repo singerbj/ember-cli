@@ -21,6 +21,7 @@
     "start": "node dist/cli.js",
     "dev": "tsx src/cli.tsx",
     "dev-mocked": "EMBER_MOCK=true tsx src/cli.tsx",
+    "dev-debug": "tsx src/cli.tsx --debug",
     "prepublishOnly": "npm run build",
     "version": "npm run build"
   },

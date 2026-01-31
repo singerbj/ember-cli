@@ -57,7 +57,7 @@ npm run dev
 
 ### When Connected
 
-- `←/→` or `h/l` - Adjust temperature by ±0.5°
+- `←/→` - Adjust temperature 1°F or 0.5°C
 - `1-3` - Select temperature preset
 - `u` - Toggle temperature unit (°C/°F)
 - `o` - Open settings (LED color, unit, preset editing)
@@ -65,9 +65,9 @@ npm run dev
 
 ### In Settings
 
-- `↑/↓` or `j/k` - Navigate settings
+- `↑/↓` - Navigate settings
 - `Enter/Space` - Toggle unit
-- `←/→` or `h/l` - Change LED color or edit preset temperature
+- `←/→` - Change LED color or edit preset temperature
 - `Esc` or `q` - Close settings
 
 ## Requirements
@@ -103,6 +103,8 @@ This application uses:
 - [Conf](https://github.com/sindresorhus/conf) for persistent settings storage
 
 The Ember mug Bluetooth protocol was reverse-engineered by [orlopau/ember-mug](https://github.com/orlopau/ember-mug).
+
+This project was heavily inspired by [EmberMate](https://github.com/matthewnitschke/EmberMate).
 
 ## Versioning
 

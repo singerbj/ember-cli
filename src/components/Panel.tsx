@@ -67,53 +67,9 @@ export function Panel({
 
   const bottomBorder = `+${"-".repeat(innerWidth)}+`;
 
-  // Calculate content height (total height minus top and bottom borders)
-  const contentHeight = height ? height - 2 : undefined;
-
-  // Build left border column - one | for each content row
-  const renderSideBorders = (content: React.ReactNode) => {
-    if (!contentHeight) {
-      // Dynamic height fallback
-      return (
-        <Box flexDirection="row" flexGrow={1}>
-          <Text color={borderColor}>|</Text>
-          <Box
-            flexDirection="column"
-            width={innerWidth}
-            paddingX={padding}
-            justifyContent={centerContent ? "center" : "flex-start"}
-            alignItems={centerContent ? "center" : "flex-start"}
-            flexGrow={1}
-          >
-            {content}
-          </Box>
-          <Text color={borderColor}>|</Text>
-        </Box>
-      );
-    }
-
-    // Fixed height: render border characters for each line
-    const borderLines = "|\n".repeat(contentHeight).trim();
-
-    return (
-      <Box flexDirection="row" height={contentHeight}>
-        <Text color={borderColor}>{borderLines}</Text>
-        <Box
-          flexDirection="column"
-          width={innerWidth}
-          paddingX={padding}
-          justifyContent={centerContent ? "center" : "flex-start"}
-          alignItems={centerContent ? "center" : "flex-start"}
-        >
-          {content}
-        </Box>
-        <Text color={borderColor}>{borderLines}</Text>
-      </Box>
-    );
-  };
-
   return (
     <Box flexDirection="column" width={actualWidth} height={height}>
+      {/* Top border with title */}
       <Text color={borderColor}>
         {title ? (
           <>
@@ -128,8 +84,22 @@ export function Panel({
         )}
       </Text>
 
-      {renderSideBorders(children)}
+      {/* Content with side borders - use Box with borderLeft/borderRight */}
+      <Box
+        flexDirection="column"
+        flexGrow={1}
+        borderStyle="single"
+        borderTop={false}
+        borderBottom={false}
+        borderColor={borderColor}
+        paddingX={padding}
+        justifyContent={centerContent ? "center" : "flex-start"}
+        alignItems={centerContent ? "center" : "flex-start"}
+      >
+        {children}
+      </Box>
 
+      {/* Bottom border */}
       <Text color={borderColor}>{bottomBorder}</Text>
     </Box>
   );

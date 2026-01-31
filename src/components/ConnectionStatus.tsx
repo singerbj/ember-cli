@@ -34,7 +34,13 @@ export function ConnectionStatus({
     <Box justifyContent="center" marginY={2}>
       <Panel
         title={
-          error ? "[!] Error" : isScanning ? "[~] Scanning" : "C[_] Welcome"
+          error
+            ? "[!] Error"
+            : foundMugName
+              ? "[~] Connecting"
+              : isScanning
+                ? "[~] Scanning"
+                : "C[_] Welcome"
         }
         titleColor={error ? "red" : theme.primary}
         borderColor={error ? "red" : theme.border}
@@ -61,14 +67,16 @@ export function ConnectionStatus({
               </Text>
             </Box>
           </Box>
-        ) : isScanning ? (
+        ) : isScanning || foundMugName ? (
           <Box flexDirection="column" alignItems="center" marginY={1}>
-            <Box>
-              <Text color={theme.primary}>
-                <Spinner type="dots" />
-              </Text>
-              <Text color={theme.text}> Searching for Ember mug...</Text>
-            </Box>
+            {!foundMugName && (
+              <Box>
+                <Text color={theme.primary}>
+                  <Spinner type="dots" />
+                </Text>
+                <Text color={theme.text}> Searching for Ember mug...</Text>
+              </Box>
+            )}
             {foundMugName && (
               <Box marginTop={1}>
                 <Text color="green" bold>
@@ -84,11 +92,12 @@ export function ConnectionStatus({
                 <Text color={theme.text}> Connecting...</Text>
               </Box>
             )}
-            <Box marginTop={1}>
-              <Text color={theme.dimText}>
-                Ensure mug is powered on and nearby
-              </Text>
-            </Box>
+            {foundMugName && (
+              <Box marginTop={1} flexDirection="column" alignItems="center">
+                <Text color={theme.dimText}>If light flashing blue:</Text>
+                <Text color={theme.dimText}>• Tap mug button to exit pairing</Text>
+              </Box>
+            )}
           </Box>
         ) : (
           <Box flexDirection="column" alignItems="center" marginY={1}>
