@@ -1,5 +1,8 @@
-import noble, { Peripheral, Characteristic, Service } from "@abandonware/noble";
+import { withBindings, Peripheral, Characteristic, Service } from "@stoprocent/noble";
 import { EventEmitter } from "events";
+
+// Initialize noble with default bindings
+const noble = withBindings('default');
 import {
   MugState,
   LiquidState,
@@ -63,7 +66,7 @@ export class BluetoothManager extends EventEmitter {
 
     noble.on("discover", async (peripheral) => {
       const name = peripheral.advertisement.localName || "";
-      const uuid = peripheral.uuid || "unknown";
+      const uuid = peripheral.id || "unknown";
       const rssi = peripheral.rssi || "unknown";
       debug(`Discovered device: name="${name}", uuid=${uuid}, rssi=${rssi}`);
 
@@ -177,7 +180,7 @@ export class BluetoothManager extends EventEmitter {
     }
 
     const CONNECTION_TIMEOUT = 10000; // 10 seconds timeout
-    const peripheralUuid = this.peripheral.uuid || "unknown";
+    const peripheralUuid = this.peripheral.id || "unknown";
     const peripheralName = this.peripheral.advertisement.localName || "unknown";
     debug(
       `Connecting to peripheral: name="${peripheralName}", uuid=${peripheralUuid}`,
